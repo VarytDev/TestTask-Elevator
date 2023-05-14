@@ -13,14 +13,6 @@ public class InteractableButton : MonoBehaviour, IInteractable
     [Header("Interaction Settings")]
     [SerializeField] private UnityEvent onInteractionEvents = null;
 
-    private void Start()
-    {
-        if (meshRenderer == null)
-        {
-            meshRenderer = GetComponent<MeshRenderer>();
-        }
-    }
-
     public void OnStartInteractableHover()
     {
         if (isAnyRequiredComponentNull() == true)
@@ -48,7 +40,7 @@ public class InteractableButton : MonoBehaviour, IInteractable
 
     private bool isAnyRequiredComponentNull()
     {
-        if (meshRenderer == null || defaultMateraial == null || selectedMateraial == null)
+        if ((meshRenderer == null && TryGetComponent(out meshRenderer) == false) || defaultMateraial == null || selectedMateraial == null)
         {
             Debug.LogError("InteractableButton :: One of required components is null!", this);
             return true;

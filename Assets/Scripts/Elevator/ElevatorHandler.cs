@@ -6,7 +6,7 @@ using UnityEngine;
 public class ElevatorHandler : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] private ElevatorDoor elevatorDoor = null;
+    [SerializeField] private ElevatorDoorHandler elevatorDoor = null;
 
     [Header("ElevatorSettings")]
     [SerializeField] private int startingFloor = 0;
@@ -14,30 +14,58 @@ public class ElevatorHandler : MonoBehaviour
     [SerializeField] private Transform[] floorTransforms = new Transform[0];
 
     private int currentFloor = 0;
+    private Tween movementTween = null;
+    private Queue<int> movementQueue = new Queue<int>();
+    private bool isMoving = false;
 
     private void Start()
     {
         initializeElevator();
     }
 
-    public void MoveElevator(int _targetFloor)
+    private void Update()
     {
-        Sequence _tweenSequence = DOTween.Sequence();
+        if (elevatorDoor.CurrentDoorState != EElevatorDoorState.Closed || isMoving == true || movementQueue.Count <= 0)
+        {
+            return;
+        }
 
-        //make sure that elevator is not moving when starting another dotween, or kill previous? or queue?
-        currentFloor = _targetFloor;
+        int _targetFloor = movementQueue.Dequeue();
+        isMoving = true;
+
+        movementTween = transform.DOMoveY(getFloorTransformInRange(_targetFloor).position.y, getElevatorMovementTime(_targetFloor))
+            .OnUpdate(onElevatorMovementUpdate)
+            .SetEase(Ease.InOutSine)
+            .OnComplete(()=> onElevatorArrived(_targetFloor));
     }
 
-    private IEnumerator moveElevatorHandler(int _targetFloor)
+    public void MoveElevator(int _targetFloor)
     {
-        yield return new WaitForSeconds(3f);
+        movementQueue.Enqueue(_targetFloor);
+    }
 
-        yield return transform.DOMoveY(getFloorTransformInRange(_targetFloor).position.y, getElevatorMovementTime(_targetFloor));
+    private void onElevatorMovementUpdate()
+    {
+        
+    }
+
+    private void onElevatorArrived(int _targetFloor)
+    {
+        isMoving = false;
+        elevatorDoor.OpenDoor();
+        currentFloor = _targetFloor;
     }
 
     private void initializeElevator()
     {
         transform.position = getFloorTransformInRange(startingFloor).position;
+    }
+
+    private int getCurrentFloor(int _movementDirection)
+    {
+        Transform _floorTransformToCheck = getFloorTransformInRange(currentFloor + _movementDirection);
+        //if(transform.y)
+        return 1;
     }
 
     private float getElevatorMovementTime(int _targetFloor)
@@ -47,8 +75,15 @@ public class ElevatorHandler : MonoBehaviour
             return 0f;
         }
 
-        float _distance = (getFloorTransformInRange(_targetFloor).position - getFloorTransformInRange(currentFloor).position).magnitude;
-        return _distance / elevatorSpeed;
+        Transform _target = getFloorTransformInRange(_targetFloor);
+        Transform _current = getFloorTransformInRange(currentFloor);
+
+        if (_target == null || _current == null)
+        {
+            return 0f;
+        }
+
+        return (_target.position - _current.position).magnitude / elevatorSpeed;
     }
 
     private Transform getFloorTransformInRange(int _floor)

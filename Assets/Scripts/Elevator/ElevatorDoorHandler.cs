@@ -1,5 +1,4 @@
 using DG.Tweening;
-using System.Collections;
 using UnityEngine;
 
 public class ElevatorDoorHandler : MonoBehaviour
@@ -89,8 +88,6 @@ public class ElevatorDoorHandler : MonoBehaviour
     private void closeDoorAfterTime()
     {
         stopAutoClose();
-
-        Debug.Log(allowAutoClose);
 
         if (allowAutoClose == false)
         {

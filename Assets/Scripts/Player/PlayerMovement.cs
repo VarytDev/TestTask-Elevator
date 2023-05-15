@@ -11,6 +11,8 @@ public class PlayerMovement : MonoBehaviour
     [Header("Movement Settings")]
     [SerializeField] private float movementSpeed = 3;
 
+    private Vector3 gravityAcceleration = Vector3.down * GRAVITY_ACCELERATION;
+
     void Update()
     {
         if (isAnyRequiredComponentNull() == true)
@@ -20,9 +22,8 @@ public class PlayerMovement : MonoBehaviour
 
         Vector3 _verticalInput = transform.forward * Input.GetAxis("Vertical") * movementSpeed;
         Vector3 _horizontalInput = transform.right * Input.GetAxis("Horizontal") * movementSpeed;
-        Vector3 _gravity = characterController.isGrounded == true ? Vector3.zero : Vector3.down * GRAVITY_ACCELERATION;
 
-        characterController.Move((_verticalInput + _horizontalInput + _gravity) * Time.deltaTime);
+        characterController.Move((_verticalInput + _horizontalInput + gravityAcceleration) * Time.deltaTime);
     }
 
     private bool isAnyRequiredComponentNull()

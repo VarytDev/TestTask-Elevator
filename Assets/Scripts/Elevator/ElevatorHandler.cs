@@ -17,6 +17,9 @@ public class ElevatorHandler : MonoBehaviour
     private Tween movementTween = null;
     private Queue<int> movementQueue = new Queue<int>();
 
+    private Transform playerTransformToUpdate = null;
+    private float playerHeightOffset = 0f;
+
     private void Start()
     {
         initializeElevator();
@@ -35,6 +38,24 @@ public class ElevatorHandler : MonoBehaviour
         }
 
         startMovingElevator();
+    }
+
+    //HACK to stop player from shaking in elevator
+    private void OnTriggerEnter(Collider _other)
+    {
+        if (_other.CompareTag(PlayerMovement.PLAYER_TAG) == true)
+        {
+            playerTransformToUpdate = _other.transform;
+            playerHeightOffset = playerTransformToUpdate.position.y - transform.position.y;
+        }
+    }
+
+    private void OnTriggerExit(Collider _other)
+    {
+        if (_other.CompareTag(PlayerMovement.PLAYER_TAG) == true)
+        {
+            playerTransformToUpdate = null;
+        }
     }
 
     public void MoveElevator(int _targetFloor)
@@ -68,8 +89,22 @@ public class ElevatorHandler : MonoBehaviour
         audioHandler.PlayMusic();
 
         movementTween = transform.DOMoveY(getFloorTransformInRange(_targetFloor).position.y, getElevatorMovementTime(_targetFloor))
+            .OnUpdate(onElevatorMoveUpdate)
             .SetEase(Ease.InOutSine)
             .OnComplete(() => onElevatorArrived(_targetFloor));
+    }
+
+    private void onElevatorMoveUpdate()
+    {
+        if (playerTransformToUpdate == null)
+        {
+            return;
+        }
+
+        //HACK to stop player from shaking in elevator
+        Vector3 _positionToSet = playerTransformToUpdate.position;
+        _positionToSet.y = transform.position.y + playerHeightOffset;
+        playerTransformToUpdate.position = _positionToSet;
     }
 
     private void onElevatorArrived(int _targetFloor)

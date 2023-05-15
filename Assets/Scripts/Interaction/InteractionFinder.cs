@@ -34,7 +34,7 @@ public class InteractionFinder : MonoBehaviour
             {
                 handleFoundInteractable(_foundInteractable);
 
-                if (Input.GetMouseButtonDown(0)) //TODO Convert to new input system
+                if (Input.GetMouseButtonDown(0))
                 {
                     currentInteractable.OnInteractableAction();
                 }

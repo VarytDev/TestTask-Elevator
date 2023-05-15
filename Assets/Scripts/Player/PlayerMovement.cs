@@ -18,7 +18,7 @@ public class PlayerMovement : MonoBehaviour
             return;
         }
 
-        Vector3 _verticalInput = transform.forward * Input.GetAxis("Vertical") * movementSpeed; //TODO Convert to new input system
+        Vector3 _verticalInput = transform.forward * Input.GetAxis("Vertical") * movementSpeed;
         Vector3 _horizontalInput = transform.right * Input.GetAxis("Horizontal") * movementSpeed;
         Vector3 _gravity = characterController.isGrounded == true ? Vector3.zero : Vector3.down * GRAVITY_ACCELERATION;
 

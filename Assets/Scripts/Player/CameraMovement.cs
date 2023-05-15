@@ -16,9 +16,6 @@ public class CameraMovement : MonoBehaviour
 
     void Start()
     {
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
-
         if (playerCamera == null)
         {
             playerCamera = Camera.main;
@@ -32,7 +29,7 @@ public class CameraMovement : MonoBehaviour
             return;
         }
 
-        transform.rotation *= Quaternion.AngleAxis(Input.GetAxis("Mouse X") * mouseSensitivityX, Vector3.up); //TODO Convert to new input system
+        transform.rotation *= Quaternion.AngleAxis(Input.GetAxis("Mouse X") * mouseSensitivityX, Vector3.up);
 
         currentVecticalAngle -= Input.GetAxis("Mouse Y") * mouseSensitivityY;
         currentVecticalAngle = Mathf.Clamp(currentVecticalAngle, minVerticalAngle, maxVerticalAngle);

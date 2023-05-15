@@ -1,5 +1,4 @@
 using DG.Tweening;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,6 +6,7 @@ public class ElevatorHandler : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private ElevatorDoorHandler elevatorDoor = null;
+    [SerializeField] private ElevatorAudioHandler audioHandler = null;
 
     [Header("ElevatorSettings")]
     [SerializeField] private int startingFloor = 0;
@@ -16,7 +16,6 @@ public class ElevatorHandler : MonoBehaviour
     private int currentFloor = 0;
     private Tween movementTween = null;
     private Queue<int> movementQueue = new Queue<int>();
-    private bool isMoving = false;
 
     private void Start()
     {
@@ -25,51 +24,88 @@ public class ElevatorHandler : MonoBehaviour
 
     private void Update()
     {
-        if (elevatorDoor.CurrentDoorState != EElevatorDoorState.Closed || isMoving == true || movementQueue.Count <= 0)
+        if (isAnyRequiredComponentNull() == true)
         {
             return;
         }
 
-        int _targetFloor = movementQueue.Dequeue();
-        isMoving = true;
+        if (elevatorDoor.CurrentDoorState != EElevatorDoorState.Closed || (movementTween != null && movementTween.active == true) || movementQueue.Count <= 0)
+        {
+            return;
+        }
 
-        movementTween = transform.DOMoveY(getFloorTransformInRange(_targetFloor).position.y, getElevatorMovementTime(_targetFloor))
-            .OnUpdate(onElevatorMovementUpdate)
-            .SetEase(Ease.InOutSine)
-            .OnComplete(()=> onElevatorArrived(_targetFloor));
+        startMovingElevator();
     }
 
     public void MoveElevator(int _targetFloor)
     {
+        if (isAnyRequiredComponentNull() == true)
+        {
+            return;
+        }
+
+        if (movementQueue.Contains(_targetFloor))
+        {
+            return;
+        }
+
+        if (currentFloor == _targetFloor)
+        {
+            elevatorDoor.OpenDoor();
+            return;
+        }
+
         movementQueue.Enqueue(_targetFloor);
     }
 
-    private void onElevatorMovementUpdate()
+    private void startMovingElevator()
     {
-        
+        elevatorDoor.CanOpenDoors = false;
+
+        int _targetFloor = movementQueue.Dequeue();
+
+        audioHandler.PlayElevatorMoveSFX();
+        audioHandler.PlayMusic();
+
+        movementTween = transform.DOMoveY(getFloorTransformInRange(_targetFloor).position.y, getElevatorMovementTime(_targetFloor))
+            .SetEase(Ease.InOutSine)
+            .OnComplete(() => onElevatorArrived(_targetFloor));
     }
 
     private void onElevatorArrived(int _targetFloor)
     {
-        isMoving = false;
+        if (isAnyRequiredComponentNull() == true)
+        {
+            return;
+        }
+
+        elevatorDoor.CanOpenDoors = true;
+
+        audioHandler.StopElevatorMoveSFX();
+        audioHandler.StopMusic();
+        audioHandler.PlayElevatorDingSFX();
+
         elevatorDoor.OpenDoor();
         currentFloor = _targetFloor;
     }
 
     private void initializeElevator()
     {
-        transform.position = getFloorTransformInRange(startingFloor).position;
-    }
+        if (isAnyRequiredComponentNull() == true)
+        {
+            return;
+        }
 
-    private int getCurrentFloor(int _movementDirection)
-    {
-        Transform _floorTransformToCheck = getFloorTransformInRange(currentFloor + _movementDirection);
-        //if(transform.y)
-        return 1;
+        transform.position = getFloorTransformInRange(startingFloor).position;
     }
 
     private float getElevatorMovementTime(int _targetFloor)
     {
+        if (isAnyRequiredComponentNull() == true)
+        {
+            return 0f;
+        }
+
         if (_targetFloor == currentFloor)
         {
             return 0f;
@@ -78,21 +114,27 @@ public class ElevatorHandler : MonoBehaviour
         Transform _target = getFloorTransformInRange(_targetFloor);
         Transform _current = getFloorTransformInRange(currentFloor);
 
-        if (_target == null || _current == null)
-        {
-            return 0f;
-        }
-
         return (_target.position - _current.position).magnitude / elevatorSpeed;
     }
 
     private Transform getFloorTransformInRange(int _floor)
     {
-        if (floorTransforms.Length <= 0)
+        if (floorTransforms.IsArrayValid() == false)
         {
             return null;
         }
 
         return floorTransforms[Mathf.Clamp(_floor, 0, floorTransforms.Length - 1)];
+    }
+
+    private bool isAnyRequiredComponentNull()
+    {
+        if (elevatorDoor == null || audioHandler == null || floorTransforms.IsArrayValid() == false)
+        {
+            Debug.LogError("ElevatorHandler :: One of required components is null!", this);
+            return true;
+        }
+
+        return false;
     }
 }

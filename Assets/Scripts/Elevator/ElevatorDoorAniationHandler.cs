@@ -1,8 +1,5 @@
 using DG.Tweening;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Events;
 
 public class ElevatorDoorAniationHandler : MonoBehaviour
 {
@@ -19,6 +16,17 @@ public class ElevatorDoorAniationHandler : MonoBehaviour
 
     private float currentOpenLevel = 0f;
     private Tween currentDoorTween = null;
+    private int cachedOpenLevelParameter = -1;
+
+    private void Start()
+    {
+        if (isAnyRequiredComponentNull())
+        {
+            return;
+        }
+
+        cachedOpenLevelParameter = Animator.StringToHash("OpenLevel");
+    }
 
     public void OpenDoor()
     {
@@ -30,9 +38,9 @@ public class ElevatorDoorAniationHandler : MonoBehaviour
         moveOpenLevelTowards(0, EElevatorDoorState.Closing, EElevatorDoorState.Closed);
     }
 
-    private void moveOpenLevelTowards(float _endValue, EElevatorDoorState _newState, EElevatorDoorState _onCompleateState) //calculate door time by normalized value distance
+    private void moveOpenLevelTowards(float _endValue, EElevatorDoorState _newState, EElevatorDoorState _onCompleateState)
     {
-        if (isAnyRequiredComponentNull())
+        if (isAnyRequiredComponentNull() || cachedOpenLevelParameter == -1)
         {
             return;
         }
@@ -50,7 +58,7 @@ public class ElevatorDoorAniationHandler : MonoBehaviour
 
     private void onDoorTweenUpdate()
     {
-        animator.SetFloat("OpenLevel", currentOpenLevel); //TODO Cache parameter
+        animator.SetFloat(cachedOpenLevelParameter, currentOpenLevel);
     }
 
     private void onDoorTweenCompleate(EElevatorDoorState _onCompleateState)
@@ -65,7 +73,7 @@ public class ElevatorDoorAniationHandler : MonoBehaviour
 
     private bool isAnyRequiredComponentNull()
     {
-        if (animator == null && TryGetComponent(out animator) == false)
+        if ((animator == null && TryGetComponent(out animator) == false))
         {
             Debug.LogError("ElevatorDoorAniationHandler :: One of required components is null!", this);
             return true;

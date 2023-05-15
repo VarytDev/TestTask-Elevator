@@ -5,6 +5,7 @@ using UnityEngine;
 public class ElevatorDoorHandler : MonoBehaviour
 {
     public EElevatorDoorState CurrentDoorState { get; private set; } = EElevatorDoorState.Closed;
+    public bool CanOpenDoors { get; set; } = true;
 
     [Header("References")]
     [SerializeField] private ElevatorDoorAniationHandler animationHandler = null;
@@ -57,7 +58,7 @@ public class ElevatorDoorHandler : MonoBehaviour
 
     public void OpenDoor()
     {
-        if (isAnyRequiredComponentNull() == true)
+        if (isAnyRequiredComponentNull() == true || CanOpenDoors == false)
         {
             return;
         }
